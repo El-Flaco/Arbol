@@ -1,26 +1,12 @@
 /* 
  * Clase para manejar un arbol binario
- *
- *Copyright (C) 2011  Federico Ramayo
- *
- *This program is free software: you can redistribute it and/or modify
- *it under the terms of the GNU General Public License as published by
- *the Free Software Foundation, either version 3 of the License, or
- *(at your option) any later version.
- *
- *This program is distributed in the hope that it will be useful,
- *but WITHOUT ANY WARRANTY; without even the implied warranty of
- *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *GNU General Public License for more details.
- *
- *You should have received a copy of the GNU General Public License
- *along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package Arbol;
+package arbol;
 
 import java.util.*;
 
 /**
+ *
  * @author ThElFlacox
  */
 public class Arbol <E extends Comparable> implements MiArbol <E>{
@@ -43,7 +29,7 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
         }
         
 	/*-CLASE NODO-*/
-    class Nodo<E>{
+    class Nodo<E extends Comparable>{
     	private Nodo<E> hD;
         private E inf;
     	private Nodo<E> hI;
@@ -98,9 +84,14 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
         public int getNum(){
     		return this.num;
     	}
+        
+         public int compareTo(E valor){
+            return compareTo(valor);
+        }
     }
     
     /*------------METODOS IMPLEMENTADOS------------*/
+    @Override
     public boolean hijo(E e) {
     	boolean b = false;
     	
@@ -112,20 +103,24 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
         return b;
     } //B
 
+    @Override
     public E hijoDer(E e) {
         Nodo<E> n = (Nodo) e;
          return (E) n.getHd(); 
     }   //B
 
+    @Override
     public E hijoIzq(E e) {
     	Nodo<E> n = (Nodo) e;
          return (E) n.getHi(); 
     }   //B
 
+    @Override
     public Iterator<E> hojas() {   	
-        return new HojasIter();
+        return new HojasIter(this.raiz);
     }   //B
 
+    @Override
     public int gradoNodo(E e) {
         int grado=-1;
         
@@ -147,6 +142,7 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
         return grado;
     }   //B
 
+    @Override
     public int gradoArbol(){
         int grado = 0;
         int max = -1;
@@ -170,20 +166,34 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
     
     public int nivel(E e){
     	int nivel = 0;
-    	Nodo<E> n = (Nodo<E>) e;
-    	nivel = n.getNiv();
-    	return nivel;
+        
+        Iterator it = this.iterator();
+        
+        Nodo<E> nodo = new Nodo<E>();
+        if(this.raiz.getInfo()!=null){
+            
+            while(it.hasNext()){
+                
+             nodo = (Nodo<E>) it.next();// = (Nodo<E>) it.next();
+                 
+                if(nodo.getInfo().compareTo(e)==0)
+                    nivel=nodo.getNiv();
+            }
+        }
+        return nivel;
     }   //B
     
     public int altura(){
     	int altura;
     	int max = -1;
-        Iterator<E> it = this.iterator();
+        Iterator it = this.iterator();
         
-        if(!this.isEmpty()){
+        Nodo<E> nodo = new Nodo<E>();
+        if(this.raiz.getInfo()!=null){
+            
             while(it.hasNext()){
-                Nodo<E> nodo = (Nodo<E>) it.next();
-                altura = nodo.getNiv();
+                nodo = (Nodo<E>) it.next();// = (Nodo<E>) it.next();
+                altura = nodo.getNiv(); 
                 if(altura > max)
                     max = altura;
             }
@@ -192,71 +202,84 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
     	return max;
     }   //B
     
+    @Override
     public MiArbol subArbolIz(E e) {
         return new SubArb(1, e, this);
     }   //B
     
+    @Override
     public MiArbol subArbolDe(E e) {
         return new SubArb(2, e, this);
     }   //B
     
+    @Override
     public Iterator<E> preOrden() {
-    	return new RecorridoIter<E>(1);
+    	return new RecorridoIter<E>(this.raiz,1);
     }   //B
 
+    @Override
     public Iterator<E> inOrden() {
-    	return new RecorridoIter<E>(2);
+    	return new RecorridoIter<E>(this.raiz,2);
     }   //B
 
+    @Override
     public Iterator<E> posOrden() {
-        return new RecorridoIter<E>(3);
+        return new RecorridoIter<E>(this.raiz,3);
     }   //B
 
+    @Override
     public E nodoRaiz() {
-        return (E) this.raiz;
+        return (E) raiz.getInfo();
     }   //B
 
+    @Override
     public boolean add(E e) {
     	boolean b = false;
-        Nodo<E> n;
+        Nodo<E> n = new Nodo<E>();
         
-    	if(this.isEmpty()){
+    	if(this.raiz==null/*this.isEmpty()*/){
     		//Si el árbol está vacío lo guarda en la raíz 
-                n =  new Nodo<E>(e);
+                n.setInfo(e); // new Nodo<E>(e);
                 n.setNiv(0);
                 n.setNum(size()+1);
     		this.raiz = n;
                 this.setSize(1);
+                b = true;
     	}
     	else{
     		//Si el árbol no está vacío empiezo a comparar desde la raíz
     		n = this.raiz;
-    		
-    		while((b == false) || (e.compareTo(n) != 0)){
+    		while((b == false) && (n.getInfo().compareTo(e) != 0)){
     			//Si es menor y el nodo no tiene hijo IZQ lo carga
-    			if((e.compareTo(n) < 0) && (hijoIzq((E)n) == null)){
+                    
+    			if(n.getInfo().compareTo(e) > 0){
+                            if(n.getHi() == null)
+                            {           
         			Nodo<E> n1 = new Nodo(e);
-        			n1.setNiv(nivel((E)n)+1);
+        			n1.setNiv(n.getNiv()+1);
                                 n1.setNum(size()+1);
                                 n.setHi(n1);
                                 this.setSize(size()+1);
                                 b = true;
-        		}
+                            }
         		else{
-                            n =(Nodo<E>) hijoIzq((E)n);
-                        }
+                            n = n.getHi();
+                           }
+                        }else{
         		
-    			//Si es mayor y el nodo no tiene hijo DER lo carga
-        		if((e.compareTo(n) > 0) && (hijoDer((E)n) == null)){
+                       	//Si es mayor y el nodo no tiene hijo DER lo carga
+        		if((n.getInfo().compareTo(e) < 0) && (n.getHd() == null)){
+                            
         			Nodo<E> n2 = new Nodo(e);
-        			n2.setNiv(nivel((E)n)+1);
+        			n2.setNiv((n.getNiv())+1);
                                 n2.setNum(size()+1);
                                 n.setHd(n2);
                                 this.setSize(size()+1);
                                 b = true;
         		}
         		else{
-                            n = (Nodo<E>)hijoDer((E)n);
+                            n = n.getHd(); //(Nodo<E>)hijoDer((E)n);
+                        }
                         }
     		}
     	}
@@ -264,6 +287,7 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
     	return b;
     }   //B
     
+    @Override
     public boolean addAll(Collection<? extends E> c) {
     	boolean b = false;
         E[] o =  (E[]) c.toArray();
@@ -315,18 +339,20 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
     	return b;
     }   //B
     
+    @Override
     public void clear() {
         this.raiz = null;
         this.setSize(0);
     }   //B
     
+    @Override
      public boolean contains(Object o) {
     	boolean b=false;
         
     	if(o == null)
             throw new NullPointerException();
         else{
-            RecorridoIter<E> it = new RecorridoIter<E>(1);
+            RecorridoIter<E> it = new RecorridoIter<E>(this.raiz,1);
             while(it.hasNext()){
                 Object comp = it.next();
                 if(o.equals(comp)) return b = true;
@@ -335,33 +361,56 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
     	return b;
     }   //B
      
+    @Override
     public boolean isEmpty() {
         boolean b;
-        if (this.nodoRaiz() == null)  b = true;
+        if (nodoRaiz() == null)  b = true;
         else b = false;
         return b;
     }   //B
    
+    @Override
     public Iterator<E> iterator() {
-        return new RecorridoIter<E>(1);
+        return new RecorridoIter<E>(this.raiz,4);
     }   //B
     
+    @Override
     public int size() {
         return this.size;
     }   //B
     
     /*-CLASES ITERATOR-*/
     class RecorridoIter<E> implements Iterator<E> {
-        private int indice = 0;
-        Object[] arr = new Object[size()+1];
+        private int indice;
+        private Object[] arr; //= new Object[size()+1];
+        Nodo  nodo = new Nodo ();
         
-        public RecorridoIter(int i){
+        public RecorridoIter(Nodo n,int i){
+            this.nodo = n;
             switch(i){
-                case 1: recPreOr(raiz);//preOrden
+                case 1:
+                    arr = new Object[size()+1]; 
+                    indice = 0;
+                    recPreOr(nodo);//preOrden
+                indice = 0;
                     break;
-                case 2: recInOr(raiz);//inOrden
+                case 2:
+                    arr = new Object[size()+1];
+                    indice = 0; 
+                    recInOr(nodo);//inOrden
+                    indice = 0;
                     break;
-                case 3: recPosOr(raiz);//posOrden
+                case 3: 
+                    arr = new Object[size()+1];
+                    indice = 0;
+                    recPosOr(nodo);//posOrden
+                    indice = 0;
+                    break;
+                case 4: 
+                    arr = new Object[size()+1];
+                    indice = 0;
+                    recIter(nodo);//posOrden
+                    indice = 0;
                     break;
                 default:try {
                             throw new NoSuchMethodException();
@@ -375,7 +424,7 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
             if (nodo == null)
                 return;
             else{
-                arr[indice] = nodo;
+                arr[indice] = nodo.getInfo();
                 indice++;
                 recPreOr(nodo.getHi());
                 recPreOr(nodo.getHd());
@@ -387,7 +436,7 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
                 return;
             else{
                 recInOr(nodo.getHi());
-                arr[indice] = nodo;
+                arr[indice] = nodo.getInfo();
                 indice++;
                 recInOr(nodo.getHd());
             }
@@ -397,10 +446,22 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
             if (nodo == null)
                 return;
             else{
-                recInOr(nodo.getHi());
-                recInOr(nodo.getHd());
+                recPosOr(nodo.getHi());
+                recPosOr(nodo.getHd());
+                arr[indice] = nodo.getInfo();
+                indice++;
+            }
+        }   //B
+        
+        private void recIter(Nodo nodo){
+            if (nodo == null)
+                return;
+            else{
                 arr[indice] = nodo;
                 indice++;
+                
+                recIter(nodo.getHi());
+                recIter(nodo.getHd());
             }
         }   //B
         
@@ -408,7 +469,8 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
             public boolean hasNext() {       
                 return arr[indice] != null;
             }   //B
-
+            
+            
             @Override
             public E next() {
                 Object ob = arr[indice];
@@ -444,9 +506,10 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
         
         private void izq(E e, Arbol ar){
             boolean b=false;
-            Nodo<E> n = (Nodo<E>) ar.nodoRaiz();
+            Nodo<E> n = new Nodo<E>();
             
             while(!b){
+                n=(Nodo<E>) ar.nodoRaiz();
                 if(n.getHi() == null && n.getHd() == null)
                     b = true;
                 if(e.compareTo(n) == 0){
@@ -496,24 +559,35 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
     class HojasIter implements Iterator<E> {
         private int indice = 0;
         Object[] arr = new Object[size()+1];
+        Nodo <E> n = new Nodo <E>();
         
-        public HojasIter() {
-            buscaHojas(raiz);
+        public HojasIter(Nodo <E> raiz) {
+            this.n = raiz;
+            System.out.println("Array "+n.getInfo());
+            buscaHojas(n);
+            indice=0;
         }
         
         private void buscaHojas(Nodo<E> nodo){
-            if(nodo.getHi() == null && nodo.getHd() == null){
-                arr[indice] = nodo;
-                indice++;
-                return;
+            if(nodo.getHi() != null && nodo.getHd() == null){
+                buscaHojas(nodo.getHi());                
             }
-            if(nodo.getHi() != null && nodo.getHd() == null)
-                buscaHojas(nodo.getHi());
-            if(nodo.getHi() == null && nodo.getHd() != null)
-                buscaHojas(nodo.getHd());
-            if(nodo.getHi() != null && nodo.getHd() != null){
-                buscaHojas(nodo.getHi());
-                buscaHojas(nodo.getHd());
+            else{
+                if(nodo.getHi() == null && nodo.getHd() != null){
+                    buscaHojas(nodo.getHd());                    
+                }
+                else{
+                    if(nodo.getHi() != null && nodo.getHd() != null){
+                        buscaHojas(nodo.getHi());
+                        buscaHojas(nodo.getHd());
+                    }else{
+                        if(nodo.getHi() == null && nodo.getHd() == null){
+                            arr[indice] = nodo.getInfo();
+                            indice++;
+                            return;
+                        }
+                    }
+                }
             }
         }   //B
         
@@ -538,21 +612,27 @@ public class Arbol <E extends Comparable> implements MiArbol <E>{
     }   //B
     
     /*------------NO IMPLEMENTADOS------------*/
+    @Override
     public Object[] toArray() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    @Override
     public <T> T[] toArray(T[] a) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    @Override
     public boolean remove(Object o) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    @Override
     public boolean containsAll(Collection<?> c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    @Override
     public boolean removeAll(Collection<?> c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    @Override
     public boolean retainAll(Collection<?> c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }

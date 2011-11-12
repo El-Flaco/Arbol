@@ -1,7 +1,7 @@
 /*
  * Interfaz para clase que maneje un árbol binario
  */
-package Arbol;
+package arbol;
 
 import java.util.Collection;
 import java.util.Iterator;
